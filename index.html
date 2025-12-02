@@ -3,218 +3,1089 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marina Page Builder</title>
+    <title>Конструктор страниц | Марина Заугольникова</title>
     
-    <!-- Telegram WebApp Script -->
+    <!-- Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Plyr (Красивый плеер для замены стандартного iOS) -->
+    <!-- Plyr Video Player -->
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
     
-    <!-- LZ-String (Для сжатия данных в ссылку) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Playfair+Display&family=Montserrat&display=swap" rel="stylesheet">
-
+    <!-- Google Fonts + кастомные -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --tg-theme-bg-color: #fff; --tg-theme-text-color: #000; --tg-theme-button-color: #3390ec; --tg-theme-button-text-color: #fff; }
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --accent: #d4a574;
+            --text: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border: #404040;
+        }
         
-        /* Контейнер */
-        #app { padding: 15px; max-width: 600px; margin: 0 auto; }
-
-        /* Режим редактора */
-        .editor-controls { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
-        .btn { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; padding: 10px 15px; border-radius: 8px; margin: 5px; cursor: pointer; font-size: 14px; }
-        .btn-del { background: #ff3b30; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        .block { position: relative; margin-bottom: 15px; border: 1px dashed #ccc; padding: 10px; border-radius: 8px; }
-        .view-mode .block { border: none; padding: 0; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--bg-color);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
         
-        /* Элементы */
-        input, textarea, select { width: 100%; box-sizing: border-box; margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
-        img { max-width: 100%; border-radius: 10px; }
+        /* Telegram Web App адаптация */
+        body.tg-webapp {
+            background: var(--tg-theme-bg-color, var(--bg-color));
+            color: var(--tg-theme-text-color, var(--text));
+        }
         
-        /* Шрифты */
-        .font-roboto { font-family: 'Roboto', sans-serif; }
-        .font-playfair { font-family: 'Playfair Display', serif; }
-        .font-montserrat { font-family: 'Montserrat', sans-serif; }
-
-        /* Стили блоков */
-        h2 { margin-top: 0; }
-        .price-tag { font-size: 1.2em; font-weight: bold; color: #2ecc71; text-align: center; margin: 10px 0; }
-
-        /* Скрытие элементов в режиме просмотра */
-        .hidden { display: none !important; }
+        .header {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--accent);
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .workspace {
+            padding: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* ===== ПАНЕЛЬ ИНСТРУМЕНТОВ ===== */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .tool-btn {
+            flex: 1;
+            min-width: 60px;
+            padding: 12px 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .tool-btn span {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .tool-btn:hover, .tool-btn:active {
+            background: var(--accent);
+            color: var(--bg-color);
+            border-color: var(--accent);
+        }
+        
+        .tool-btn:hover span, .tool-btn:active span {
+            color: var(--bg-color);
+        }
+        
+        /* ===== БЛОКИ КОНТЕНТА ===== */
+        .content-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 300px;
+        }
+        
+        .content-block {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .block-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .block-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .block-btn.move-up, .block-btn.move-down {
+            background: var(--bg-color);
+            color: var(--text-secondary);
+        }
+        
+        .block-btn.delete {
+            background: #ff4757;
+            color: white;
+        }
+        
+        .block-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* ===== ТЕКСТОВЫЕ БЛОКИ ===== */
+        .text-input {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text);
+            font-size: 16px;
+            resize: vertical;
+            min-height: 50px;
+            font-family: inherit;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .text-input.heading {
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .text-input.subheading {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        /* Форматирование текста */
+        .format-toolbar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .format-btn {
+            padding: 6px 10px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .format-btn:hover, .format-btn.active {
+            background: var(--accent);
+            color: var(--bg-color);
+            border-color: var(--accent);
+        }
+        
+        .format-btn.bold { font-weight: bold; }
+        .format-btn.italic { font-style: italic; }
+        .format-btn.underline { text-decoration: underline; }
+        
+        /* Выбор шрифта */
+        .font-select {
+            padding: 6px 10px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .font-size-input {
+            width: 50px;
+            padding: 6px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        /* ===== МЕДИА БЛОКИ ===== */
+        .media-upload {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .media-upload:hover {
+            border-color: var(--accent);
+            background: rgba(212, 165, 116, 0.1);
+        }
+        
+        .media-upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .media-upload p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .media-preview {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .media-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .media-preview video {
+            width: 100%;
+            height: auto;
+        }
         
         /* Plyr кастомизация */
-        .plyr { border-radius: 12px; overflow: hidden; margin-top: 10px; }
+        .plyr--video {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .plyr--full-ui input[type=range] {
+            color: var(--accent);
+        }
+        
+        .plyr__control--overlaid {
+            background: var(--accent) !important;
+        }
+        
+        .plyr__control:hover {
+            background: var(--accent) !important;
+        }
+        
+        /* ===== РАЗДЕЛИТЕЛИ ===== */
+        .divider-block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        
+        .divider-icon {
+            padding: 0 15px;
+            color: var(--accent);
+            font-size: 16px;
+        }
+        
+        /* ===== НИЖНЯЯ ПАНЕЛЬ ===== */
+        .bottom-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .save-btn {
+            flex: 1;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--accent) 0%, #c49660 100%);
+            border: none;
+            border-radius: 10px;
+            color: var(--bg-color);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 165, 116, 0.3);
+        }
+        
+        .preview-btn {
+            padding: 15px 20px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preview-btn:hover {
+            border-color: var(--accent);
+        }
+        
+        /* ===== МОДАЛКА ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 400px;
+            width: 100%;
+            transform: scale(0.9);
+            transition: all 0.3s;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+        
+        .modal h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--accent);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .link-display {
+            background: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 12px;
+            color: var(--accent);
+            margin: 15px 0;
+            border: 1px solid var(--border);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .modal-btn.primary {
+            background: var(--accent);
+            color: var(--bg-color);
+            border: none;
+        }
+        
+        .modal-btn.secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        /* ===== ПУСТОЕ СОСТОЯНИЕ ===== */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state h3 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-
-<div id="app">
-    <!-- Панель управления (видна только Марине) -->
-    <div id="editor-panel" class="editor-controls hidden">
-        <h3>Конструктор</h3>
-        <button class="btn" onclick="addBlock('header')">+ Заголовок</button>
-        <button class="btn" onclick="addBlock('text')">+ Текст</button>
-        <button class="btn" onclick="addBlock('image')">+ Фото (URL)</button>
-        <button class="btn" onclick="addBlock('video')">+ Видео (Plyr)</button>
-        <button class="btn" onclick="addBlock('price')">+ Цена</button>
-        <hr>
-        <label>Шрифт страницы:</label>
-        <select id="font-selector" onchange="changeGlobalFont()">
-            <option value="font-roboto">Roboto (Стандарт)</option>
-            <option value="font-playfair">Playfair (Элегантный)</option>
-            <option value="font-montserrat">Montserrat (Строгий)</option>
-        </select>
-        <br><br>
-        <button class="btn" style="width: 100%; font-weight: bold;" onclick="savePage()">💾 СОХРАНИТЬ И ПОЛУЧИТЬ ССЫЛКУ</button>
+    <div class="header">
+        <h1>✨ Конструктор страниц</h1>
+        <p>Создайте красивую страницу для услуги</p>
     </div>
-
-    <!-- Сюда добавляются блоки -->
-    <div id="content-area"></div>
-</div>
-
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    // Получаем данные из URL (если это клиент)
-    const urlParams = new URLSearchParams(window.location.search);
-    const compressedData = urlParams.get('data');
-
-    let blocks = [];
-    let globalFont = 'font-roboto';
-
-    if (compressedData) {
-        // --- РЕЖИМ ПРОСМОТРА (КЛИЕНТ) ---
-        try {
-            const json = LZString.decompressFromEncodedURIComponent(compressedData);
-            const data = JSON.parse(json);
-            blocks = data.blocks;
-            globalFont = data.font || 'font-roboto';
-            document.body.classList.add(globalFont);
-            document.body.classList.add('view-mode');
-            renderView();
-        } catch (e) {
-            alert("Ошибка чтения ссылки");
-        }
-    } else {
-        // --- РЕЖИМ РЕДАКТОРА (МАРИНА) ---
-        document.getElementById('editor-panel').classList.remove('hidden');
-        tg.MainButton.setText("Отправить ссылку в бота");
-        tg.MainButton.onClick(() => savePage(true));
-    }
-
-    // Функция добавления блока (для редактора)
-    function addBlock(type) {
-        const blockId = Date.now();
-        blocks.push({ id: blockId, type: type, content: '' });
-        renderEditor();
-    }
-
-    // Удаление блока
-    function removeBlock(id) {
-        blocks = blocks.filter(b => b.id !== id);
-        renderEditor();
-    }
-
-    // Обновление контента в массиве
-    function updateBlock(id, value) {
-        const block = blocks.find(b => b.id === id);
-        if (block) block.content = value;
-    }
-
-    // Рендер редактора (поля ввода)
-    function renderEditor() {
-        const container = document.getElementById('content-area');
-        container.innerHTML = '';
-        document.body.className = globalFont;
-
-        blocks.forEach(block => {
-            const div = document.createElement('div');
-            div.className = 'block';
-            
-            let inputHtml = '';
-            if (block.type === 'header') inputHtml = `<input type="text" placeholder="Заголовок" oninput="updateBlock(${block.id}, this.value)" value="${block.content}">`;
-            if (block.type === 'text') inputHtml = `<textarea rows="4" placeholder="Текст описания" oninput="updateBlock(${block.id}, this.value)">${block.content}</textarea>`;
-            if (block.type === 'image') inputHtml = `<input type="text" placeholder="Ссылка на фото (https://...)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}"><br><small>Вставь прямую ссылку</small>`;
-            if (block.type === 'video') inputHtml = `<input type="text" placeholder="Ссылка на видео (mp4/прямая)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}"><br><small>Прямая ссылка на MP4 работает лучше всего</small>`;
-            if (block.type === 'price') inputHtml = `<input type="text" placeholder="Цена (например: 5000 руб)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}">`;
-
-            div.innerHTML = `
-                <strong>${block.type.toUpperCase()}</strong>
-                <button class="btn btn-del" style="float:right; padding: 2px 8px;" onclick="removeBlock(${block.id})">X</button>
-                ${inputHtml}
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    // Рендер просмотра (финальный вид)
-    function renderView() {
-        const container = document.getElementById('content-area');
-        container.innerHTML = '';
-
-        blocks.forEach(block => {
-            const div = document.createElement('div');
-            div.style.marginBottom = "20px";
-            
-            if (block.type === 'header') {
-                div.innerHTML = `<h2>${block.content}</h2>`;
-            } else if (block.type === 'text') {
-                div.innerHTML = `<p style="white-space: pre-wrap;">${block.content}</p>`;
-            } else if (block.type === 'image') {
-                div.innerHTML = `<img src="${block.content}" alt="Image">`;
-            } else if (block.type === 'video') {
-                // Вставляем плеер Plyr
-                const videoId = `player-${block.id}`;
-                div.innerHTML = `
-                    <video id="${videoId}" playsinline controls>
-                        <source src="${block.content}" type="video/mp4" />
-                    </video>
-                `;
-                setTimeout(() => { new Plyr(`#${videoId}`); }, 100);
-            } else if (block.type === 'price') {
-                div.className = 'price-tag';
-                div.innerText = block.content;
-            }
-            container.appendChild(div);
-        });
-    }
-
-    function changeGlobalFont() {
-        globalFont = document.getElementById('font-selector').value;
-        document.body.className = globalFont;
-    }
-
-    function savePage(sendToBot = false) {
-        const data = {
-            blocks: blocks,
-            font: globalFont
-        };
-        const json = JSON.stringify(data);
-        const compressed = LZString.compressToEncodedURIComponent(json);
+    
+    <div class="workspace">
+        <!-- Панель инструментов -->
+        <div class="toolbar">
+            <button class="tool-btn" onclick="addBlock('heading')">
+                📝
+                <span>Заголовок</span>
+            </button>
+            <button class="tool-btn" onclick="addBlock('subheading')">
+                📋
+                <span>Подзаголовок</span>
+            </button>
+            <button class="tool-btn" onclick="addBlock('text')">
+                📄
+                <span>Текст</span>
+            </button>
+            <button class="tool-btn" onclick="addBlock('photo')">
+                📷
+                <span>Фото</span>
+            </button>
+            <button class="tool-btn" onclick="addBlock('video')">
+                🎬
+                <span>Видео</span>
+            </button>
+            <button class="tool-btn" onclick="addBlock('divider')">
+                ➖
+                <span>Разделитель</span>
+            </button>
+        </div>
         
-        // Формируем ссылку на саму себя с данными
-        const baseUrl = window.location.href.split('?')[0];
-        const fullUrl = `${baseUrl}?data=${compressed}`;
-
-        if (sendToBot) {
-            // Автоматическая отправка в бота (лучший вариант)
-            tg.sendData(fullUrl);
-        } else {
-            // Ручное копирование (резервный вариант)
-            navigator.clipboard.writeText(fullUrl).then(() => {
-                alert("Ссылка скопирована! Теперь вставь её в бота.");
+        <!-- Блоки контента -->
+        <div class="content-blocks" id="contentBlocks">
+            <div class="empty-state">
+                <div class="empty-state-icon">🎨</div>
+                <h3>Начните создавать!</h3>
+                <p>Нажмите на кнопку выше, чтобы добавить элемент</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Нижняя панель -->
+    <div class="bottom-panel">
+        <button class="preview-btn" onclick="previewPage()">👁 Превью</button>
+        <button class="save-btn" onclick="savePage()">💾 Сохранить и получить ссылку</button>
+    </div>
+    
+    <!-- Модалка сохранения -->
+    <div class="modal-overlay" id="saveModal">
+        <div class="modal">
+            <h3>🔗 Ваша страница готова!</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; text-align: center; margin-bottom: 15px;">
+                Скопируйте ссылку и вставьте её в бота
+            </p>
+            <div class="link-display" id="pageLink"></div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal()">Закрыть</button>
+                <button class="modal-btn primary" onclick="copyLink()">📋 Копировать</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модалка названия страницы -->
+    <div class="modal-overlay" id="nameModal">
+        <div class="modal">
+            <h3>📝 Название страницы</h3>
+            <input type="text" class="modal-input" id="pageName" placeholder="Например: Семейная фотосессия">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeNameModal()">Отмена</button>
+                <button class="modal-btn primary" onclick="confirmSave()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loading">
+        <div class="loader"></div>
+    </div>
+    
+    <!-- Plyr.js -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    
+    <script>
+        // ===== TELEGRAM WEB APP =====
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            document.body.classList.add('tg-webapp');
+            
+            // Применяем тему Telegram
+            if (tg.themeParams) {
+                document.documentElement.style.setProperty('--bg-color', tg.themeParams.bg_color || '#1a1a1a');
+                document.documentElement.style.setProperty('--text', tg.themeParams.text_color || '#ffffff');
+            }
+        }
+        
+        // ===== ХРАНИЛИЩЕ БЛОКОВ =====
+        let blocks = [];
+        let blockCounter = 0;
+        let uploadedFiles = {}; // Для хранения загруженных файлов
+        
+        // ===== ШРИФТЫ =====
+        const fonts = [
+            { name: 'Montserrat', value: "'Montserrat', sans-serif" },
+            { name: 'Playfair Display', value: "'Playfair Display', serif" },
+            { name: 'Roboto', value: "'Roboto', sans-serif" },
+            { name: 'Georgia', value: "Georgia, serif" },
+            { name: 'Arial', value: "Arial, sans-serif" }
+        ];
+        
+        // ===== ДОБАВЛЕНИЕ БЛОКОВ =====
+        function addBlock(type) {
+            const container = document.getElementById('contentBlocks');
+            
+            // Убираем пустое состояние
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+            
+            const blockId = `block_${++blockCounter}`;
+            const block = document.createElement('div');
+            block.className = 'content-block';
+            block.id = blockId;
+            block.dataset.type = type;
+            
+            let content = '';
+            
+            switch (type) {
+                case 'heading':
+                    content = createTextBlock(blockId, 'heading', 'Заголовок', 'Введите заголовок...');
+                    break;
+                case 'subheading':
+                    content = createTextBlock(blockId, 'subheading', 'Подзаголовок', 'Введите подзаголовок...');
+                    break;
+                case 'text':
+                    content = createRichTextBlock(blockId);
+                    break;
+                case 'photo':
+                    content = createMediaBlock(blockId, 'photo');
+                    break;
+                case 'video':
+                    content = createMediaBlock(blockId, 'video');
+                    break;
+                case 'divider':
+                    content = createDividerBlock(blockId);
+                    break;
+            }
+            
+            block.innerHTML = `
+                <div class="block-controls">
+                    <button class="block-btn move-up" onclick="moveBlock('${blockId}', -1)">↑</button>
+                    <button class="block-btn move-down" onclick="moveBlock('${blockId}', 1)">↓</button>
+                    <button class="block-btn delete" onclick="deleteBlock('${blockId}')">✕</button>
+                </div>
+                ${content}
+            `;
+            
+            container.appendChild(block);
+            
+            // Инициализируем Plyr для видео
+            if (type === 'video') {
+                initPlyr(blockId);
+            }
+            
+            // Сохраняем в массив
+            blocks.push({
+                id: blockId,
+                type: type,
+                data: {}
+            });
+            
+            // Скроллим к новому блоку
+            block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        // ===== СОЗДАНИЕ ТЕКСТОВОГО БЛОКА =====
+        function createTextBlock(blockId, type, label, placeholder) {
+            return `
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; display: block;">
+                    ${label}
+                </label>
+                <textarea 
+                    class="text-input ${type}" 
+                    placeholder="${placeholder}"
+                    oninput="updateBlockData('${blockId}', 'content', this.value)"
+                    rows="1"
+                ></textarea>
+            `;
+        }
+        
+        // ===== СОЗДАНИЕ БЛОКА С ФОРМАТИРОВАНИЕМ =====
+        function createRichTextBlock(blockId) {
+            const fontOptions = fonts.map(f => 
+                `<option value="${f.value}">${f.name}</option>`
+            ).join('');
+            
+            return `
+                <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; display: block;">
+                    Текст
+                </label>
+                <div class="format-toolbar">
+                    <button class="format-btn bold" onclick="toggleFormat('${blockId}', 'bold')" title="Жирный">B</button>
+                    <button class="format-btn italic" onclick="toggleFormat('${blockId}', 'italic')" title="Курсив">I</button>
+                    <button class="format-btn underline" onclick="toggleFormat('${blockId}', 'underline')" title="Подчёркнутый">U</button>
+                    <select class="font-select" onchange="changeFont('${blockId}', this.value)">
+                        ${fontOptions}
+                    </select>
+                    <input type="number" class="font-size-input" value="16" min="10" max="72" 
+                           onchange="changeFontSize('${blockId}', this.value)" title="Размер шрифта">
+                    <input type="color" class="color-picker" value="#ffffff" 
+                           onchange="changeColor('${blockId}', this.value)" title="Цвет текста">
+                </div>
+                <div 
+                    class="text-input" 
+                    contenteditable="true" 
+                    id="editor_${blockId}"
+                    style="min-height: 100px; white-space: pre-wrap;"
+                    oninput="updateBlockData('${blockId}', 'content', this.innerHTML)"
+                    placeholder="Введите текст..."
+                ></div>
+            `;
+        }
+        
+        // ===== СОЗДАНИЕ МЕДИА БЛОКА =====
+        function createMediaBlock(blockId, mediaType) {
+            const icon = mediaType === 'photo' ? '📷' : '🎬';
+            const text = mediaType === 'photo' ? 'фото' : 'видео';
+            const accept = mediaType === 'photo' ? 'image/*' : 'video/*';
+            
+            return `
+                <div class="media-upload" onclick="document.getElementById('file_${blockId}').click()">
+                    <div class="media-upload-icon">${icon}</div>
+                    <p>Нажмите, чтобы загрузить ${text}</p>
+                    <input type="file" id="file_${blockId}" accept="${accept}" 
+                           style="display: none;" onchange="handleFileUpload('${blockId}', '${mediaType}', this)">
+                </div>
+                <div class="media-preview" id="preview_${blockId}" style="display: none;"></div>
+            `;
+        }
+        
+        // ===== СОЗДАНИЕ РАЗДЕЛИТЕЛЯ =====
+        function createDividerBlock(blockId) {
+            return `
+                <div class="divider-block">
+                    <div class="divider-line"></div>
+                    <div class="divider-icon">✦</div>
+                    <div class="divider-line"></div>
+                </div>
+            `;
+        }
+        
+        // ===== ЗАГРУЗКА ФАЙЛОВ =====
+        function handleFileUpload(blockId, mediaType, input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const uploadDiv = input.parentElement;
+            const previewDiv = document.getElementById(`preview_${blockId}`);
+            
+            // Показываем loading
+            uploadDiv.innerHTML = `
+                <div class="media-upload-icon">⏳</div>
+                <p>Загрузка...</p>
+            `;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const dataUrl = e.target.result;
+                
+                // Сохраняем файл
+                uploadedFiles[blockId] = {
+                    type: mediaType,
+                    data: dataUrl,
+                    name: file.name
+                };
+                
+                // Обновляем данные блока
+                updateBlockData(blockId, 'file', dataUrl);
+                updateBlockData(blockId, 'fileName', file.name);
+                
+                // Показываем превью
+                uploadDiv.style.display = 'none';
+                previewDiv.style.display = 'block';
+                
+                if (mediaType === 'photo') {
+                    previewDiv.innerHTML = `
+                        <img src="${dataUrl}" alt="Фото">
+                        <button class="format-btn" style="margin-top: 10px; width: 100%;" 
+                                onclick="replaceMedia('${blockId}', '${mediaType}')">
+                            🔄 Заменить фото
+                        </button>
+                    `;
+                } else {
+                    previewDiv.innerHTML = `
+                        <video id="video_${blockId}" playsinline>
+                            <source src="${dataUrl}" type="${file.type}">
+                        </video>
+                        <button class="format-btn" style="margin-top: 10px; width: 100%;" 
+                                onclick="replaceMedia('${blockId}', '${mediaType}')">
+                            🔄 Заменить видео
+                        </button>
+                    `;
+                    
+                    // Инициализируем Plyr
+                    setTimeout(() => initPlyr(blockId), 100);
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // ===== ЗАМЕНА МЕДИА =====
+        function replaceMedia(blockId, mediaType) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = mediaType === 'photo' ? 'image/*' : 'video/*';
+            input.onchange = function() {
+                handleFileUpload(blockId, mediaType, this);
+            };
+            input.click();
+        }
+        
+        // ===== PLYR ИНИЦИАЛИЗАЦИЯ =====
+        function initPlyr(blockId) {
+            const video = document.getElementById(`video_${blockId}`);
+            if (video) {
+                new Plyr(video, {
+                    controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'fullscreen'],
+                    hideControls: false,
+                    resetOnEnd: true
+                });
+            }
+        }
+        
+        // ===== ФОРМАТИРОВАНИЕ ТЕКСТА =====
+        function toggleFormat(blockId, format) {
+            document.execCommand(format, false, null);
+            
+            // Сохраняем состояние
+            const editor = document.getElementById(`editor_${blockId}`);
+            if (editor) {
+                updateBlockData(blockId, 'content', editor.innerHTML);
+            }
+        }
+        
+        function changeFont(blockId, fontFamily) {
+            const editor = document.getElementById(`editor_${blockId}`);
+            if (editor) {
+                editor.style.fontFamily = fontFamily;
+                updateBlockData(blockId, 'fontFamily', fontFamily);
+            }
+        }
+        
+        function changeFontSize(blockId, size) {
+            const editor = document.getElementById(`editor_${blockId}`);
+            if (editor) {
+                editor.style.fontSize = size + 'px';
+                updateBlockData(blockId, 'fontSize', size);
+            }
+        }
+        
+        function changeColor(blockId, color) {
+            const editor = document.getElementById(`editor_${blockId}`);
+            if (editor) {
+                editor.style.color = color;
+                updateBlockData(blockId, 'color', color);
+            }
+        }
+        
+        // ===== ОБНОВЛЕНИЕ ДАННЫХ БЛОКА =====
+        function updateBlockData(blockId, key, value) {
+            const block = blocks.find(b => b.id === blockId);
+            if (block) {
+                block.data[key] = value;
+            }
+        }
+        
+        // ===== ПЕРЕМЕЩЕНИЕ БЛОКОВ =====
+        function moveBlock(blockId, direction) {
+            const container = document.getElementById('contentBlocks');
+            const block = document.getElementById(blockId);
+            const index = Array.from(container.children).indexOf(block);
+            
+            if (direction === -1 && index > 0) {
+                container.insertBefore(block, container.children[index - 1]);
+            } else if (direction === 1 && index < container.children.length - 1) {
+                container.insertBefore(block, container.children[index + 2]);
+            }
+            
+            // Обновляем порядок в массиве
+            const blockIndex = blocks.findIndex(b => b.id === blockId);
+            if (blockIndex !== -1) {
+                const newIndex = blockIndex + direction;
+                if (newIndex >= 0 && newIndex < blocks.length) {
+                    const temp = blocks[blockIndex];
+                    blocks[blockIndex] = blocks[newIndex];
+                    blocks[newIndex] = temp;
+                }
+            }
+        }
+        
+        // ===== УДАЛЕНИЕ БЛОКА =====
+        function deleteBlock(blockId) {
+            const block = document.getElementById(blockId);
+            if (block) {
+                block.style.animation = 'fadeIn 0.3s ease reverse';
+                setTimeout(() => {
+                    block.remove();
+                    blocks = blocks.filter(b => b.id !== blockId);
+                    delete uploadedFiles[blockId];
+                    
+                    // Показываем пустое состояние если нет блоков
+                    const container = document.getElementById('contentBlocks');
+                    if (container.children.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🎨</div>
+                                <h3>Начните создавать!</h3>
+                                <p>Нажмите на кнопку выше, чтобы добавить элемент</p>
+                            </div>
+                        `;
+                    }
+                }, 300);
+            }
+        }
+        
+        // ===== СОХРАНЕНИЕ СТРАНИЦЫ =====
+        function savePage() {
+            if (blocks.length === 0) {
+                alert('Добавьте хотя бы один элемент!');
+                return;
+            }
+            
+            document.getElementById('nameModal').classList.add('active');
+        }
+        
+        function closeNameModal() {
+            document.getElementById('nameModal').classList.remove('active');
+        }
+        
+        function confirmSave() {
+            const pageName = document.getElementById('pageName').value.trim();
+            if (!pageName) {
+                alert('Введите название страницы');
+                return;
+            }
+            
+            closeNameModal();
+            showLoading();
+            
+            // Генерируем ID страницы
+            const pageId = 'page_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Собираем данные
+            const pageData = {
+                id: pageId,
+                name: pageName,
+                created: new Date().toISOString(),
+                blocks: blocks
+            };
+            
+            // В реальном проекте тут отправка на сервер
+            // Пока сохраняем в localStorage
+            localStorage.setItem(pageId, JSON.stringify(pageData));
+            
+            // Формируем ссылку
+            const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+            const pageUrl = `${baseUrl}view.html?id=${pageId}`;
+            
+            hideLoading();
+            
+            // Показываем ссылку
+            document.getElementById('pageLink').textContent = pageUrl;
+            document.getElementById('saveModal').classList.add('active');
+            
+            // Если в Telegram - отправляем данные в бот
+            if (tg) {
+                tg.sendData(JSON.stringify({
+                    type: 'page_created',
+                    pageId: pageId,
+                    pageUrl: pageUrl,
+                    pageName: pageName
+                }));
+            }
+        }
+        
+        function copyLink() {
+            const link = document.getElementById('pageLink').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.querySelector('.modal-btn.primary');
+                btn.textContent = '✅ Скопировано!';
+                setTimeout(() => {
+                    btn.textContent = '📋 Копировать';
+                }, 2000);
             });
         }
-    }
-</script>
-
+        
+        function closeModal() {
+            document.getElementById('saveModal').classList.remove('active');
+        }
+        
+        // ===== ПРЕВЬЮ =====
+        function previewPage() {
+            // Сохраняем временно для превью
+            const tempData = {
+                id: 'preview',
+                name: 'Превью',
+                blocks: blocks
+            };
+            localStorage.setItem('preview', JSON.stringify(tempData));
+            
+            // Открываем в новом окне
+            window.open('view.html?id=preview', '_blank');
+        }
+        
+        // ===== LOADING =====
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+        
+        // ===== ИНИЦИАЛИЗАЦИЯ =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // Проверяем есть ли сохранённые данные для редактирования
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            
+            if (editId) {
+                const savedData = localStorage.getItem(editId);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    // Восстанавливаем блоки
+                    // TODO: Реализовать восстановление
+                }
+            }
+        });
+    </script>
 </body>
-  </html>
+</html>
