@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marina Page Builder</title>
+    
+    <!-- Telegram WebApp Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Plyr (Красивый плеер для замены стандартного iOS) -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    
+    <!-- LZ-String (Для сжатия данных в ссылку) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Playfair+Display&family=Montserrat&display=swap" rel="stylesheet">
+
+    <style>
+        :root { --tg-theme-bg-color: #fff; --tg-theme-text-color: #000; --tg-theme-button-color: #3390ec; --tg-theme-button-text-color: #fff; }
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); }
+        
+        /* Контейнер */
+        #app { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+        /* Режим редактора */
+        .editor-controls { border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .btn { background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; padding: 10px 15px; border-radius: 8px; margin: 5px; cursor: pointer; font-size: 14px; }
+        .btn-del { background: #ff3b30; }
+        
+        .block { position: relative; margin-bottom: 15px; border: 1px dashed #ccc; padding: 10px; border-radius: 8px; }
+        .view-mode .block { border: none; padding: 0; }
+        
+        /* Элементы */
+        input, textarea, select { width: 100%; box-sizing: border-box; margin-top: 5px; padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
+        img { max-width: 100%; border-radius: 10px; }
+        
+        /* Шрифты */
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+
+        /* Стили блоков */
+        h2 { margin-top: 0; }
+        .price-tag { font-size: 1.2em; font-weight: bold; color: #2ecc71; text-align: center; margin: 10px 0; }
+
+        /* Скрытие элементов в режиме просмотра */
+        .hidden { display: none !important; }
+        
+        /* Plyr кастомизация */
+        .plyr { border-radius: 12px; overflow: hidden; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Панель управления (видна только Марине) -->
+    <div id="editor-panel" class="editor-controls hidden">
+        <h3>Конструктор</h3>
+        <button class="btn" onclick="addBlock('header')">+ Заголовок</button>
+        <button class="btn" onclick="addBlock('text')">+ Текст</button>
+        <button class="btn" onclick="addBlock('image')">+ Фото (URL)</button>
+        <button class="btn" onclick="addBlock('video')">+ Видео (Plyr)</button>
+        <button class="btn" onclick="addBlock('price')">+ Цена</button>
+        <hr>
+        <label>Шрифт страницы:</label>
+        <select id="font-selector" onchange="changeGlobalFont()">
+            <option value="font-roboto">Roboto (Стандарт)</option>
+            <option value="font-playfair">Playfair (Элегантный)</option>
+            <option value="font-montserrat">Montserrat (Строгий)</option>
+        </select>
+        <br><br>
+        <button class="btn" style="width: 100%; font-weight: bold;" onclick="savePage()">💾 СОХРАНИТЬ И ПОЛУЧИТЬ ССЫЛКУ</button>
+    </div>
+
+    <!-- Сюда добавляются блоки -->
+    <div id="content-area"></div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    // Получаем данные из URL (если это клиент)
+    const urlParams = new URLSearchParams(window.location.search);
+    const compressedData = urlParams.get('data');
+
+    let blocks = [];
+    let globalFont = 'font-roboto';
+
+    if (compressedData) {
+        // --- РЕЖИМ ПРОСМОТРА (КЛИЕНТ) ---
+        try {
+            const json = LZString.decompressFromEncodedURIComponent(compressedData);
+            const data = JSON.parse(json);
+            blocks = data.blocks;
+            globalFont = data.font || 'font-roboto';
+            document.body.classList.add(globalFont);
+            document.body.classList.add('view-mode');
+            renderView();
+        } catch (e) {
+            alert("Ошибка чтения ссылки");
+        }
+    } else {
+        // --- РЕЖИМ РЕДАКТОРА (МАРИНА) ---
+        document.getElementById('editor-panel').classList.remove('hidden');
+        tg.MainButton.setText("Отправить ссылку в бота");
+        tg.MainButton.onClick(() => savePage(true));
+    }
+
+    // Функция добавления блока (для редактора)
+    function addBlock(type) {
+        const blockId = Date.now();
+        blocks.push({ id: blockId, type: type, content: '' });
+        renderEditor();
+    }
+
+    // Удаление блока
+    function removeBlock(id) {
+        blocks = blocks.filter(b => b.id !== id);
+        renderEditor();
+    }
+
+    // Обновление контента в массиве
+    function updateBlock(id, value) {
+        const block = blocks.find(b => b.id === id);
+        if (block) block.content = value;
+    }
+
+    // Рендер редактора (поля ввода)
+    function renderEditor() {
+        const container = document.getElementById('content-area');
+        container.innerHTML = '';
+        document.body.className = globalFont;
+
+        blocks.forEach(block => {
+            const div = document.createElement('div');
+            div.className = 'block';
+            
+            let inputHtml = '';
+            if (block.type === 'header') inputHtml = `<input type="text" placeholder="Заголовок" oninput="updateBlock(${block.id}, this.value)" value="${block.content}">`;
+            if (block.type === 'text') inputHtml = `<textarea rows="4" placeholder="Текст описания" oninput="updateBlock(${block.id}, this.value)">${block.content}</textarea>`;
+            if (block.type === 'image') inputHtml = `<input type="text" placeholder="Ссылка на фото (https://...)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}"><br><small>Вставь прямую ссылку</small>`;
+            if (block.type === 'video') inputHtml = `<input type="text" placeholder="Ссылка на видео (mp4/прямая)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}"><br><small>Прямая ссылка на MP4 работает лучше всего</small>`;
+            if (block.type === 'price') inputHtml = `<input type="text" placeholder="Цена (например: 5000 руб)" oninput="updateBlock(${block.id}, this.value)" value="${block.content}">`;
+
+            div.innerHTML = `
+                <strong>${block.type.toUpperCase()}</strong>
+                <button class="btn btn-del" style="float:right; padding: 2px 8px;" onclick="removeBlock(${block.id})">X</button>
+                ${inputHtml}
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // Рендер просмотра (финальный вид)
+    function renderView() {
+        const container = document.getElementById('content-area');
+        container.innerHTML = '';
+
+        blocks.forEach(block => {
+            const div = document.createElement('div');
+            div.style.marginBottom = "20px";
+            
+            if (block.type === 'header') {
+                div.innerHTML = `<h2>${block.content}</h2>`;
+            } else if (block.type === 'text') {
+                div.innerHTML = `<p style="white-space: pre-wrap;">${block.content}</p>`;
+            } else if (block.type === 'image') {
+                div.innerHTML = `<img src="${block.content}" alt="Image">`;
+            } else if (block.type === 'video') {
+                // Вставляем плеер Plyr
+                const videoId = `player-${block.id}`;
+                div.innerHTML = `
+                    <video id="${videoId}" playsinline controls>
+                        <source src="${block.content}" type="video/mp4" />
+                    </video>
+                `;
+                setTimeout(() => { new Plyr(`#${videoId}`); }, 100);
+            } else if (block.type === 'price') {
+                div.className = 'price-tag';
+                div.innerText = block.content;
+            }
+            container.appendChild(div);
+        });
+    }
+
+    function changeGlobalFont() {
+        globalFont = document.getElementById('font-selector').value;
+        document.body.className = globalFont;
+    }
+
+    function savePage(sendToBot = false) {
+        const data = {
+            blocks: blocks,
+            font: globalFont
+        };
+        const json = JSON.stringify(data);
+        const compressed = LZString.compressToEncodedURIComponent(json);
+        
+        // Формируем ссылку на саму себя с данными
+        const baseUrl = window.location.href.split('?')[0];
+        const fullUrl = `${baseUrl}?data=${compressed}`;
+
+        if (sendToBot) {
+            // Автоматическая отправка в бота (лучший вариант)
+            tg.sendData(fullUrl);
+        } else {
+            // Ручное копирование (резервный вариант)
+            navigator.clipboard.writeText(fullUrl).then(() => {
+                alert("Ссылка скопирована! Теперь вставь её в бота.");
+            });
+        }
+    }
+</script>
+
+</body>
+  </html>
